@@ -1,0 +1,65 @@
+[18:43:45] ========================================
+[18:43:45] Pinpoint starting up
+[18:43:45] Python: 3.11.15 (main, May 10 2026, 19:31:25) [MSC v.1944 64 bit (AMD64)]
+[18:43:45] Screen: (2560, 1440)
+[18:43:45] Magnification API available: True
+[18:43:45] MagInitialize() = True
+[18:43:45] Hotkey thread started
+[18:43:45] Pinpoint started
+[18:43:45] Screen: (2560, 1440)
+[18:43:55] Zoom mode changed to Center Screen
+[18:44:05] Zoom mode changed to Center Screen
+[18:44:07] Creating scope host at 1130,570 size=300
+[18:44:07] Host created: hwnd=4522354
+[18:44:07] Magnifier created: hwnd=2557554
+[18:44:07] MagSetWindowTransform = True
+[18:44:07] Overlay created
+[18:44:07] Scope shown
+[18:44:13] Scope destroyed
+[18:44:14] Creating scope host at 1130,570 size=300
+[18:44:14] Host created: hwnd=4587890
+[18:44:14] Magnifier created: hwnd=2623090
+[18:44:14] MagSetWindowTransform = True
+[18:44:14] Overlay created
+[18:44:14] Scope shown
+[18:44:15] Scope destroyed
+[18:44:23] ========================================
+[18:44:23] Pinpoint starting up
+[18:44:23] Python: 3.11.15 (main, May 10 2026, 19:31:25) [MSC v.1944 64 bit (AMD64)]
+[18:44:23] Screen: (2560, 1440)
+[18:44:23] Magnification API available: True
+[18:44:23] MagInitialize() = True
+[18:44:23] Pinpoint started
+[18:44:23] Hotkey thread started
+[18:44:23] Screen: (2560, 1440)
+[18:44:27] Zoom mode changed to Center Screen
+[18:46:44] Exiting...
+[18:46:44] MagUninitialize() called
+[18:46:44] Hotkey thread exited
+[18:46:44] Pinpoint exited
+[18:46:53] ========================================
+[18:46:53] Pinpoint starting up
+[18:46:53] Python: 3.11.15 (main, May 10 2026, 19:31:25) [MSC v.1944 64 bit (AMD64)]
+[18:46:53] Screen: (2560, 1440)
+[18:46:53] Magnification API available: True
+[18:46:53] Monitors detected: 2
+[18:46:53]   Monitor 1: 1440x2560 @ (2560,-975) primary=False
+[18:46:53]   Monitor 2: 2560x1440 @ (0,0) primary=True
+[18:46:53] MagInitialize() = True
+[18:46:53] Hotkey thread started
+[18:46:53] Pinpoint started
+[18:46:53] Screen: (2560, 1440)
+[18:46:56] Creating scope host at 1130,570 on monitor 2 size=300
+[18:46:56] Host created: hwnd=2950818
+[18:46:56] Magnifier created: hwnd=526094
+[18:46:56] MagSetWindowTransform = True
+[18:46:56] Overlay created
+[18:46:56] Scope shown
+[18:46:57] Scope destroyed
+[18:46:57] Creating scope host at 1130,570 on monitor 2 size=300
+[18:46:57] Host created: hwnd=3016354
+[18:46:57] Magnifier created: hwnd=591630
+[18:46:57] MagSetWindowTransform = True
+[18:46:57] Overlay created
+[18:46:57] Scope shown
+[18:46:57] Scope destroyed

@@ -109,6 +109,56 @@ class POINT(ctypes.Structure):
     _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
 
 
+class MONITORINFO(ctypes.Structure):
+    _fields_ = [
+        ("cbSize", ctypes.c_uint32),
+        ("rcMonitor", RECT),
+        ("rcWork", RECT),
+        ("dwFlags", ctypes.c_uint32),
+    ]
+
+
+MONITORENUMPROC = ctypes.WINFUNCTYPE(
+    ctypes.c_bool,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    ctypes.POINTER(RECT),
+    ctypes.c_ssize_t,
+)
+
+_monitors_temp = []
+
+
+def _monitor_enum_proc(hMonitor, hdcMonitor, lprcMonitor, dwData):
+    global _monitors_temp
+    rect = lprcMonitor.contents
+    mi = MONITORINFO()
+    mi.cbSize = ctypes.sizeof(MONITORINFO)
+    user32.GetMonitorInfoW(hMonitor, ctypes.byref(mi))
+    _monitors_temp.append({
+        "left": rect.left,
+        "top": rect.top,
+        "right": rect.right,
+        "bottom": rect.bottom,
+        "width": rect.right - rect.left,
+        "height": rect.bottom - rect.top,
+        "cx": (rect.left + rect.right) // 2,
+        "cy": (rect.top + rect.bottom) // 2,
+        "primary": bool(mi.dwFlags & 0x00000001),
+    })
+    return True
+
+
+def enumerate_monitors():
+    global _monitors_temp
+    _monitors_temp = []
+    callback = MONITORENUMPROC(_monitor_enum_proc)
+    user32.EnumDisplayMonitors(None, None, callback, 0)
+    result = list(_monitors_temp)
+    _monitors_temp = []
+    return result
+
+
 # ---------------------------------------------------------------------------
 # Load Magnification API
 # ---------------------------------------------------------------------------
@@ -160,9 +210,22 @@ class ScopeApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Pinpoint")
-        self.root.geometry("440x460")
+        self.root.geometry("440x490")
         self.root.resizable(False, False)
         self.root.configure(bg="#1e1e1e")
+
+        # Monitor detection
+        self.monitors = enumerate_monitors()
+        self.monitor_names = [
+            f"Monitor {i+1} ({m['width']}x{m['height']})" + (" [Primary]" if m['primary'] else "")
+            for i, m in enumerate(self.monitors)
+        ]
+        self.selected_monitor_idx = next(
+            (i for i, m in enumerate(self.monitors) if m["primary"]), 0
+        )
+        log(f"Monitors detected: {len(self.monitors)}")
+        for i, m in enumerate(self.monitors):
+            log(f"  Monitor {i+1}: {m['width']}x{m['height']} @ ({m['left']},{m['top']}) primary={m['primary']}")
 
         # Settings state
         self.zoom = DEFAULT_ZOOM
@@ -249,24 +312,32 @@ class ScopeApp:
         mode_combo.grid(row=1, column=1, padx=5, pady=4)
         mode_combo.bind("<<ComboboxSelected>>", self.on_mode_change)
 
+        # Monitor dropdown
+        tk.Label(settings, text="Target Monitor:", fg="#ffffff", bg="#1e1e1e", font=("Segoe UI", 10)).grid(row=2, column=0, padx=5, pady=4, sticky="w")
+        self.monitor_var = tk.StringVar(value=self.monitor_names[self.selected_monitor_idx])
+        self.monitor_combo = ttk.Combobox(settings, textvariable=self.monitor_var, values=self.monitor_names,
+                                          state="readonly", width=14)
+        self.monitor_combo.grid(row=2, column=1, padx=5, pady=4)
+        self.monitor_combo.bind("<<ComboboxSelected>>", self.on_monitor_change)
+
         # Toggle mode checkbox
         self.toggle_var = tk.BooleanVar(value=self.click_to_toggle)
         tk.Checkbutton(settings, text="Click to toggle (vs hold)", variable=self.toggle_var,
                        bg="#1e1e1e", fg="#ffffff", selectcolor="#1e1e1e",
                        activebackground="#1e1e1e", activeforeground="#ffffff",
-                       font=("Segoe UI", 10), command=self.on_click_toggle_change).grid(row=2, column=0, columnspan=2, sticky="w", padx=5, pady=2)
+                       font=("Segoe UI", 10), command=self.on_click_toggle_change).grid(row=3, column=0, columnspan=2, sticky="w", padx=5, pady=2)
 
         # Crosshair checkbox
         self.crosshair_var = tk.BooleanVar(value=self.show_crosshair)
         tk.Checkbutton(settings, text="Show crosshair & border", variable=self.crosshair_var,
                        bg="#1e1e1e", fg="#ffffff", selectcolor="#1e1e1e",
                        activebackground="#1e1e1e", activeforeground="#ffffff",
-                       font=("Segoe UI", 10), command=self.on_crosshair_change).grid(row=3, column=0, columnspan=2, sticky="w", padx=5, pady=2)
+                       font=("Segoe UI", 10), command=self.on_crosshair_change).grid(row=4, column=0, columnspan=2, sticky="w", padx=5, pady=2)
 
         # Reset button
         tk.Button(settings, text="Reset Defaults", command=self.reset_defaults,
                   bg="#555555", fg="#ffffff", font=("Segoe UI", 9),
-                  width=14, relief=tk.FLAT, cursor="hand2").grid(row=4, column=0, columnspan=2, pady=6)
+                  width=14, relief=tk.FLAT, cursor="hand2").grid(row=5, column=0, columnspan=2, pady=6)
 
         # --- Action buttons ---
         btn_frame = tk.Frame(self.root, bg="#1e1e1e")
@@ -304,6 +375,15 @@ class ScopeApp:
         self.mode = self.mode_var.get()
         log(f"Zoom mode changed to {self.mode}")
 
+    def on_monitor_change(self, event=None):
+        name = self.monitor_var.get()
+        for i, n in enumerate(self.monitor_names):
+            if n == name:
+                self.selected_monitor_idx = i
+                break
+        mon = self.monitors[self.selected_monitor_idx]
+        log(f"Target monitor changed to {name} @ ({mon['left']},{mon['top']})")
+
     def on_click_toggle_change(self):
         self.click_to_toggle = self.toggle_var.get()
         mode = "click-to-toggle" if self.click_to_toggle else "hold"
@@ -323,6 +403,10 @@ class ScopeApp:
         self.toggle_key = DEFAULT_TOGGLE_KEY
         self.mode_var.set(DEFAULT_MODE)
         self.mode = DEFAULT_MODE
+        self.selected_monitor_idx = next(
+            (i for i, m in enumerate(self.monitors) if m["primary"]), 0
+        )
+        self.monitor_var.set(self.monitor_names[self.selected_monitor_idx])
         self.toggle_var.set(DEFAULT_CLICK_TOGGLE)
         self.click_to_toggle = DEFAULT_CLICK_TOGGLE
         self.crosshair_var.set(DEFAULT_CROSSHAIR)
@@ -345,9 +429,9 @@ class ScopeApp:
         self.scope_size = int(float(val))
         self.size_label.config(text=f"{self.scope_size}px")
         if self.scope_hwnd:
-            sw, sh = get_screen_size()
-            x = (sw - self.scope_size) // 2
-            y = (sh - self.scope_size) // 2
+            mon = self.monitors[self.selected_monitor_idx]
+            x = mon['cx'] - self.scope_size // 2
+            y = mon['cy'] - self.scope_size // 2
             user32.SetWindowPos(
                 self.scope_hwnd, 0, x, y, self.scope_size, self.scope_size,
                 SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED
@@ -374,16 +458,16 @@ class ScopeApp:
     # Scope creation
     # -----------------------------------------------------------------------
     def create_scope_window(self):
-        sw, sh = get_screen_size()
-        x = (sw - self.scope_size) // 2
-        y = (sh - self.scope_size) // 2
+        mon = self.monitors[self.selected_monitor_idx]
+        x = mon['cx'] - self.scope_size // 2
+        y = mon['cy'] - self.scope_size // 2
 
-        log(f"Creating scope host at {x},{y} size={self.scope_size}")
+        log(f"Creating scope host at {x},{y} on monitor {self.selected_monitor_idx + 1} size={self.scope_size}")
 
         hwnd = user32.CreateWindowExW(
             WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE,
             "Static",
-            "ScopeX",
+            "Pinpoint",
             WS_POPUP | WS_CLIPCHILDREN | WS_VISIBLE,
             x, y, self.scope_size, self.scope_size,
             None, None, None, None
@@ -463,21 +547,28 @@ class ScopeApp:
         try:
             capture_w = max(1, int(self.scope_size / self.zoom))
             capture_h = max(1, int(self.scope_size / self.zoom))
-            sw, sh = get_screen_size()
 
             if self.mode == "Follow Mouse":
                 mx, my = get_cursor_pos()
                 x1 = mx - capture_w // 2
                 y1 = my - capture_h // 2
+                # Clamp to virtual screen (all monitors)
+                vsw = user32.GetSystemMetrics(78)  # SM_CXVIRTUALSCREEN
+                vsh = user32.GetSystemMetrics(79)   # SM_CYVIRTUALSCREEN
+                vsx = user32.GetSystemMetrics(76)   # SM_XVIRTUALSCREEN
+                vsy = user32.GetSystemMetrics(77)   # SM_YVIRTUALSCREEN
+                x1 = max(vsx, x1); y1 = max(vsy, y1)
+                x2 = x1 + capture_w
+                y2 = y1 + capture_h
+                x2 = min(vsx + vsw, x2); y2 = min(vsy + vsh, y2)
             else:  # Center Screen
-                x1 = (sw - capture_w) // 2
-                y1 = (sh - capture_h) // 2
-
-            x2 = x1 + capture_w
-            y2 = y1 + capture_h
-
-            x1 = max(0, x1); y1 = max(0, y1)
-            x2 = min(sw, x2); y2 = min(sh, y2)
+                mon = self.monitors[self.selected_monitor_idx]
+                x1 = mon['cx'] - capture_w // 2
+                y1 = mon['cy'] - capture_h // 2
+                x2 = x1 + capture_w
+                y2 = y1 + capture_h
+                x1 = max(mon['left'], x1); y1 = max(mon['top'], y1)
+                x2 = min(mon['right'], x2); y2 = min(mon['bottom'], y2)
 
             rect = RECT()
             rect.left = x1; rect.top = y1; rect.right = x2; rect.bottom = y2
@@ -529,9 +620,9 @@ class ScopeApp:
             if not self.scope_hwnd:
                 return
 
-            sw, sh = get_screen_size()
-            x = (sw - self.scope_size) // 2
-            y = (sh - self.scope_size) // 2
+            mon = self.monitors[self.selected_monitor_idx]
+            x = mon['cx'] - self.scope_size // 2
+            y = mon['cy'] - self.scope_size // 2
             self.overlay = self.create_overlay(x, y)
 
             self.scope_active = True
