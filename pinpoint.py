@@ -21,6 +21,8 @@ DEFAULT_ZOOM = 2.0
 DEFAULT_SIZE = 300
 DEFAULT_CROSSHAIR = True
 DEFAULT_CLICK_TOGGLE = False
+DEFAULT_MODE = "Follow Mouse"
+MODES = ["Follow Mouse", "Center Screen"]
 UPDATE_INTERVAL = 16
 
 # Key map for UI dropdown
@@ -168,6 +170,7 @@ class ScopeApp:
         self.toggle_key = DEFAULT_TOGGLE_KEY
         self.show_crosshair = DEFAULT_CROSSHAIR
         self.click_to_toggle = DEFAULT_CLICK_TOGGLE
+        self.mode = DEFAULT_MODE
 
         # Runtime state
         self.scope_active = False
@@ -190,7 +193,7 @@ class ScopeApp:
 
         self.hk_thread = threading.Thread(target=self.hotkey_loop, daemon=True)
         self.hk_thread.start()
-        log("ScopeX started")
+        log("Pinpoint started")
         log(f"Screen: {get_screen_size()}")
 
     # -----------------------------------------------------------------------
@@ -238,24 +241,32 @@ class ScopeApp:
         key_combo.grid(row=0, column=1, padx=5, pady=4)
         key_combo.bind("<<ComboboxSelected>>", self.on_key_change)
 
-        # Mode checkbox
+        # Mode dropdown
+        tk.Label(settings, text="Zoom Mode:", fg="#ffffff", bg="#1e1e1e", font=("Segoe UI", 10)).grid(row=1, column=0, padx=5, pady=4, sticky="w")
+        self.mode_var = tk.StringVar(value=self.mode)
+        mode_combo = ttk.Combobox(settings, textvariable=self.mode_var, values=MODES,
+                                  state="readonly", width=14)
+        mode_combo.grid(row=1, column=1, padx=5, pady=4)
+        mode_combo.bind("<<ComboboxSelected>>", self.on_mode_change)
+
+        # Toggle mode checkbox
         self.toggle_var = tk.BooleanVar(value=self.click_to_toggle)
         tk.Checkbutton(settings, text="Click to toggle (vs hold)", variable=self.toggle_var,
                        bg="#1e1e1e", fg="#ffffff", selectcolor="#1e1e1e",
                        activebackground="#1e1e1e", activeforeground="#ffffff",
-                       font=("Segoe UI", 10), command=self.on_mode_change).grid(row=1, column=0, columnspan=2, sticky="w", padx=5, pady=2)
+                       font=("Segoe UI", 10), command=self.on_click_toggle_change).grid(row=2, column=0, columnspan=2, sticky="w", padx=5, pady=2)
 
         # Crosshair checkbox
         self.crosshair_var = tk.BooleanVar(value=self.show_crosshair)
         tk.Checkbutton(settings, text="Show crosshair & border", variable=self.crosshair_var,
                        bg="#1e1e1e", fg="#ffffff", selectcolor="#1e1e1e",
                        activebackground="#1e1e1e", activeforeground="#ffffff",
-                       font=("Segoe UI", 10), command=self.on_crosshair_change).grid(row=2, column=0, columnspan=2, sticky="w", padx=5, pady=2)
+                       font=("Segoe UI", 10), command=self.on_crosshair_change).grid(row=3, column=0, columnspan=2, sticky="w", padx=5, pady=2)
 
         # Reset button
         tk.Button(settings, text="Reset Defaults", command=self.reset_defaults,
                   bg="#555555", fg="#ffffff", font=("Segoe UI", 9),
-                  width=14, relief=tk.FLAT, cursor="hand2").grid(row=3, column=0, columnspan=2, pady=6)
+                  width=14, relief=tk.FLAT, cursor="hand2").grid(row=4, column=0, columnspan=2, pady=6)
 
         # --- Action buttons ---
         btn_frame = tk.Frame(self.root, bg="#1e1e1e")
@@ -289,10 +300,14 @@ class ScopeApp:
             self.toggle_key = new_key
             log(f"Key rebound to {name} (0x{new_key:02X})")
 
-    def on_mode_change(self):
+    def on_mode_change(self, event=None):
+        self.mode = self.mode_var.get()
+        log(f"Zoom mode changed to {self.mode}")
+
+    def on_click_toggle_change(self):
         self.click_to_toggle = self.toggle_var.get()
         mode = "click-to-toggle" if self.click_to_toggle else "hold"
-        log(f"Mode changed to {mode}")
+        log(f"Trigger mode changed to {mode}")
 
     def on_crosshair_change(self):
         self.show_crosshair = self.crosshair_var.get()
@@ -306,6 +321,8 @@ class ScopeApp:
         self.on_size_change(DEFAULT_SIZE)
         self.key_var.set(INV_KEY_MAP[DEFAULT_TOGGLE_KEY])
         self.toggle_key = DEFAULT_TOGGLE_KEY
+        self.mode_var.set(DEFAULT_MODE)
+        self.mode = DEFAULT_MODE
         self.toggle_var.set(DEFAULT_CLICK_TOGGLE)
         self.click_to_toggle = DEFAULT_CLICK_TOGGLE
         self.crosshair_var.set(DEFAULT_CROSSHAIR)
@@ -444,16 +461,21 @@ class ScopeApp:
             return
 
         try:
-            mx, my = get_cursor_pos()
             capture_w = max(1, int(self.scope_size / self.zoom))
             capture_h = max(1, int(self.scope_size / self.zoom))
+            sw, sh = get_screen_size()
 
-            x1 = mx - capture_w // 2
-            y1 = my - capture_h // 2
+            if self.mode == "Follow Mouse":
+                mx, my = get_cursor_pos()
+                x1 = mx - capture_w // 2
+                y1 = my - capture_h // 2
+            else:  # Center Screen
+                x1 = (sw - capture_w) // 2
+                y1 = (sh - capture_h) // 2
+
             x2 = x1 + capture_w
             y2 = y1 + capture_h
 
-            sw, sh = get_screen_size()
             x1 = max(0, x1); y1 = max(0, y1)
             x2 = min(sw, x2); y2 = min(sh, y2)
 
@@ -465,7 +487,7 @@ class ScopeApp:
                 self.debug_label.config(text="Debug: MagSetWindowSource failed")
                 log("MagSetWindowSource failed")
             else:
-                self.debug_label.config(text=f"Debug: source {x1},{y1} {capture_w}x{capture_h}")
+                self.debug_label.config(text=f"Debug: {self.mode} | source {x1},{y1} {capture_w}x{capture_h}")
 
             user32.InvalidateRect(self.mag_hwnd, None, True)
 
@@ -595,7 +617,7 @@ class ScopeApp:
 # ---------------------------------------------------------------------------
 def main():
     log("=" * 40)
-    log("ScopeX starting up")
+    log("Pinpoint starting up")
     log(f"Python: {sys.version}")
     log(f"Screen: {get_screen_size()}")
     log(f"Magnification API available: {MAG_AVAILABLE}")
@@ -603,7 +625,7 @@ def main():
     app = ScopeApp(root)
     root.protocol("WM_DELETE_WINDOW", app.exit_app)
     root.mainloop()
-    log("ScopeX exited")
+    log("Pinpoint exited")
 
 
 if __name__ == "__main__":
