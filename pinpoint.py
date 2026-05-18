@@ -11,6 +11,8 @@ import time
 import ctypes
 import traceback
 import sys
+import json
+import os
 
 # Windows DPI awareness
 ctypes.windll.user32.SetProcessDPIAware()
@@ -24,6 +26,26 @@ DEFAULT_CLICK_TOGGLE = False
 DEFAULT_MODE = "Follow Mouse"
 MODES = ["Follow Mouse", "Center Screen"]
 UPDATE_INTERVAL = 16
+SETTINGS_FILE = "settings.json"
+
+
+def load_settings():
+    if os.path.exists(SETTINGS_FILE):
+        try:
+            with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            log(f"Failed to load settings: {e}")
+    return {}
+
+
+def save_settings(data):
+    try:
+        with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        log(f"Failed to save settings: {e}")
+
 
 # Key map for UI dropdown
 KEY_MAP = {
@@ -235,6 +257,21 @@ class ScopeApp:
         self.click_to_toggle = DEFAULT_CLICK_TOGGLE
         self.mode = DEFAULT_MODE
 
+        # Load persisted settings
+        saved = load_settings()
+        if saved:
+            self.zoom = saved.get("zoom", DEFAULT_ZOOM)
+            self.scope_size = saved.get("scope_size", DEFAULT_SIZE)
+            self.toggle_key = saved.get("toggle_key", DEFAULT_TOGGLE_KEY)
+            self.show_crosshair = saved.get("show_crosshair", DEFAULT_CROSSHAIR)
+            self.click_to_toggle = saved.get("click_to_toggle", DEFAULT_CLICK_TOGGLE)
+            self.mode = saved.get("mode", DEFAULT_MODE)
+            if "selected_monitor_idx" in saved:
+                idx = saved["selected_monitor_idx"]
+                if 0 <= idx < len(self.monitors):
+                    self.selected_monitor_idx = idx
+            log("Loaded saved settings")
+
         # Runtime state
         self.scope_active = False
         self.scope_hwnd = None
@@ -364,15 +401,29 @@ class ScopeApp:
     # -----------------------------------------------------------------------
     # Settings callbacks
     # -----------------------------------------------------------------------
+    def _save_settings(self):
+        data = {
+            "zoom": self.zoom,
+            "scope_size": self.scope_size,
+            "toggle_key": self.toggle_key,
+            "show_crosshair": self.show_crosshair,
+            "click_to_toggle": self.click_to_toggle,
+            "mode": self.mode,
+            "selected_monitor_idx": self.selected_monitor_idx,
+        }
+        save_settings(data)
+
     def on_key_change(self, event=None):
         name = self.key_var.get()
         new_key = KEY_MAP.get(name, DEFAULT_TOGGLE_KEY)
         if new_key != self.toggle_key:
             self.toggle_key = new_key
+            self._save_settings()
             log(f"Key rebound to {name} (0x{new_key:02X})")
 
     def on_mode_change(self, event=None):
         self.mode = self.mode_var.get()
+        self._save_settings()
         log(f"Zoom mode changed to {self.mode}")
 
     def on_monitor_change(self, event=None):
@@ -381,20 +432,28 @@ class ScopeApp:
             if n == name:
                 self.selected_monitor_idx = i
                 break
+        self._save_settings()
         mon = self.monitors[self.selected_monitor_idx]
         log(f"Target monitor changed to {name} @ ({mon['left']},{mon['top']})")
 
     def on_click_toggle_change(self):
         self.click_to_toggle = self.toggle_var.get()
+        self._save_settings()
         mode = "click-to-toggle" if self.click_to_toggle else "hold"
         log(f"Trigger mode changed to {mode}")
 
     def on_crosshair_change(self):
         self.show_crosshair = self.crosshair_var.get()
         self.refresh_crosshair()
+        self._save_settings()
         log(f"Crosshair set to {self.show_crosshair}")
 
     def reset_defaults(self):
+        if os.path.exists(SETTINGS_FILE):
+            try:
+                os.remove(SETTINGS_FILE)
+            except Exception as e:
+                log(f"Failed to delete settings file: {e}")
         self.zoom_var.set(DEFAULT_ZOOM)
         self.on_zoom_change(DEFAULT_ZOOM)
         self.size_var.set(DEFAULT_SIZE)
@@ -420,6 +479,7 @@ class ScopeApp:
     def on_zoom_change(self, val):
         self.zoom = float(val)
         self.zoom_label.config(text=f"{self.zoom:.1f}x")
+        self._save_settings()
         if self.mag_hwnd and MAG_AVAILABLE:
             t = make_transform(self.zoom)
             mag.MagSetWindowTransform(self.mag_hwnd, ctypes.byref(t))
@@ -428,6 +488,7 @@ class ScopeApp:
     def on_size_change(self, val):
         self.scope_size = int(float(val))
         self.size_label.config(text=f"{self.scope_size}px")
+        self._save_settings()
         if self.scope_hwnd:
             mon = self.monitors[self.selected_monitor_idx]
             x = mon['cx'] - self.scope_size // 2
