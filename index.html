@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinpoint - Windows Screen Magnifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0f;
+            color: #e2e8f0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a0f 70%);
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(0,255,136,0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .scope-demo {
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            border: 3px solid #00ff88;
+            position: relative;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(2px);
+            animation: pulse 3s ease-in-out infinite;
+        }
+        .scope-demo::before, .scope-demo::after {
+            content: '';
+            position: absolute;
+            background: #00ff88;
+            opacity: 0.6;
+        }
+        .scope-demo::before {
+            width: 1px;
+            height: 80%;
+        }
+        .scope-demo::after {
+            width: 80%;
+            height: 1px;
+        }
+        .scope-demo .center-dot {
+            width: 8px;
+            height: 8px;
+            border: 1px solid #00ff88;
+            border-radius: 50%;
+            position: absolute;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(0,255,136,0.15); }
+            50% { box-shadow: 0 0 40px rgba(0,255,136,0.3); }
+        }
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            letter-spacing: -1px;
+        }
+        .hero h1 span { color: #00ff88; }
+        .hero p.tagline {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            max-width: 500px;
+            margin-bottom: 2rem;
+        }
+        .cta {
+            display: inline-flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .btn {
+            padding: 0.9rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+        .btn-primary {
+            background: #00ff88;
+            color: #0a0a0f;
+        }
+        .btn-primary:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: transparent;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+        }
+        .btn-secondary:hover {
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+
+        /* Features */
+        .features {
+            padding: 6rem 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .features h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            color: #ffffff;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+        .feature-card {
+            background: #111118;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.2s;
+        }
+        .feature-card:hover {
+            border-color: #00ff88;
+            transform: translateY(-4px);
+        }
+        .feature-card .icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+        .feature-card p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+
+        /* Use cases */
+        .usecases {
+            background: #0f0f16;
+            padding: 6rem 2rem;
+        }
+        .usecases-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .usecases h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            color: #ffffff;
+        }
+        .usecase-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+        .usecase-item {
+            background: #111118;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .usecase-item .emoji {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .usecase-item h4 {
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .usecase-item p {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            border-top: 1px solid #1e293b;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        footer a {
+            color: #00ff88;
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .hero h1 { font-size: 2.5rem; }
+            .scope-demo { width: 200px; height: 200px; }
+        }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <div class="scope-demo">
+            <div class="center-dot"></div>
+        </div>
+        <h1><span>Pin</span>point</h1>
+        <p class="tagline">A lightweight, customizable screen magnifier for Windows. Perfect for gaming, design, and precision work.</p>
+        <div class="cta">
+            <a href="https://github.com/yourusername/pinpoint" class="btn btn-primary">Download on GitHub</a>
+            <a href="#features" class="btn btn-secondary">Learn More</a>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <h2>Why Pinpoint?</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="icon">&#9889;</div>
+                <h3>Native Performance</h3>
+                <p>Built on the Windows Magnification API for GPU-accelerated, lag-free zoom. No slow screenshot loops.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">&#127918;</div>
+                <h3>Gaming Ready</h3>
+                <p>Click-through overlay means your mouse still works in-game. Toggle with any key or mouse button.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">&#9881;&#65039;</div>
+                <h3>Fully Customizable</h3>
+                <p>Adjust zoom (1x-5x), scope size (100-600px), trigger key, crosshair, and toggle behavior on the fly.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">&#128375;</div>
+                <h3>Cursor Tracking</h3>
+                <p>The magnified view follows your mouse in real time. Always focused exactly where you need it.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">&#128161;</div>
+                <h3>Zero Dependencies</h3>
+                <p>Only needs Python and Pillow. No heavy frameworks or complex installers.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">&#128275;</div>
+                <h3>Open Source</h3>
+                <p>MIT licensed. Free to use, modify, and share. Community contributions welcome.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="usecases">
+        <div class="usecases-inner">
+            <h2>Built For</h2>
+            <div class="usecase-list">
+                <div class="usecase-item">
+                    <div class="emoji">&#127918;</div>
+                    <h4>Gamers</h4>
+                    <p>Zoom in on distant targets, read small UI text, inspect fine details without leaning in.</p>
+                </div>
+                <div class="usecase-item">
+                    <div class="emoji">&#127912;</div>
+                    <h4>Designers</h4>
+                    <p>Pixel-perfect editing, color inspection, and detail work without eye strain.</p>
+                </div>
+                <div class="usecase-item">
+                    <div class="emoji">&#128424;&#65039;</div>
+                    <h4>Creators</h4>
+                    <p>Stream zoomed-in highlights to your audience for tutorials and gameplay moments.</p>
+                </div>
+                <div class="usecase-item">
+                    <div class="emoji">&#9855;</div>
+                    <h4>Accessibility</h4>
+                    <p>Quick magnification wherever your cursor goes, without disrupting your workflow.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>Pinpoint is open source under the MIT License.</p>
+        <p><a href="https://github.com/yourusername/pinpoint">GitHub</a> &middot; Made with Python + the Windows Magnification API</p>
+    </footer>
+</body>
+</html>
