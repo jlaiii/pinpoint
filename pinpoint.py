@@ -21,7 +21,7 @@ ctypes.windll.user32.SetProcessDPIAware()
 DEFAULT_TOGGLE_KEY = 0x02
 DEFAULT_ZOOM = 2.0
 DEFAULT_SIZE = 300
-DEFAULT_CROSSHAIR = True
+DEFAULT_CROSSHAIR = False
 DEFAULT_CLICK_TOGGLE = False
 DEFAULT_MODE = "Follow Mouse"
 MODES = ["Follow Mouse", "Center Screen"]

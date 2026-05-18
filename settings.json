@@ -1,0 +1,10 @@
+{
+  "zoom": 2.0,
+  "scope_size": 300,
+  "toggle_key": 2,
+  "show_crosshair": true,
+  "click_to_toggle": false,
+  "mode": "Follow Mouse",
+  "selected_monitor_idx": 1,
+  "refresh_ms": 7
+}
