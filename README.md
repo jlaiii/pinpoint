@@ -79,4 +79,4 @@ MIT License — free to use, modify, and share.
 
 ---
 
-**Website:** [https://yourusername.github.io/pinpoint](https://yourusername.github.io/pinpoint)
+**Website:** [https://jlaiii.github.io/pinpoint](https://jlaiii.github.io/pinpoint)
