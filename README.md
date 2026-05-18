@@ -1,12 +1,12 @@
 # Pinpoint
 
-A lightweight, customizable screen magnifier overlay for Windows — perfect for gaming, precision work, or anyone who needs a quick zoomed-in view centered on their cursor.
+A lightweight, customizable screen magnifier overlay for Windows.
 
-![Pinpoint Screenshot](https://via.placeholder.com/800x450/1e1e1e/00ff88?text=Pinpoint+Preview)
+## About
+
+Pinpoint is a simple yet powerful Windows utility that creates a circular magnified scope overlay on your screen. Unlike the built-in Windows Magnifier, it gives you instant toggle control, cursor tracking, and full customization — all without slowing down your system.
 
 ## What is Pinpoint?
-
-Pinpoint is a simple yet powerful Windows utility that creates a circular magnified scope overlay on your screen. Unlike the built-in Windows Magnifier, it gives you:
 
 - **Instant toggle** — hold a key (or click to toggle) to show/hide the scope
 - **Follows your cursor** — the magnified view tracks your mouse in real time
