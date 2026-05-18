@@ -25,7 +25,14 @@ DEFAULT_CROSSHAIR = True
 DEFAULT_CLICK_TOGGLE = False
 DEFAULT_MODE = "Follow Mouse"
 MODES = ["Follow Mouse", "Center Screen"]
-UPDATE_INTERVAL = 16
+DEFAULT_REFRESH = 16
+REFRESH_OPTIONS = {
+    "144 FPS (7ms)": 7,
+    "120 FPS (8ms)": 8,
+    "60 FPS (16ms)": 16,
+    "30 FPS (33ms)": 33,
+}
+REFRESH_NAMES = list(REFRESH_OPTIONS.keys())
 SETTINGS_FILE = "settings.json"
 
 
@@ -249,6 +256,12 @@ class ScopeApp:
         for i, m in enumerate(self.monitors):
             log(f"  Monitor {i+1}: {m['width']}x{m['height']} @ ({m['left']},{m['top']}) primary={m['primary']}")
 
+        # Cache virtual screen metrics (never change while app runs)
+        self._vs_w = user32.GetSystemMetrics(78)
+        self._vs_h = user32.GetSystemMetrics(79)
+        self._vs_x = user32.GetSystemMetrics(76)
+        self._vs_y = user32.GetSystemMetrics(77)
+
         # Settings state
         self.zoom = DEFAULT_ZOOM
         self.scope_size = DEFAULT_SIZE
@@ -256,6 +269,7 @@ class ScopeApp:
         self.show_crosshair = DEFAULT_CROSSHAIR
         self.click_to_toggle = DEFAULT_CLICK_TOGGLE
         self.mode = DEFAULT_MODE
+        self.refresh_ms = DEFAULT_REFRESH
 
         # Load persisted settings
         saved = load_settings()
@@ -266,6 +280,7 @@ class ScopeApp:
             self.show_crosshair = saved.get("show_crosshair", DEFAULT_CROSSHAIR)
             self.click_to_toggle = saved.get("click_to_toggle", DEFAULT_CLICK_TOGGLE)
             self.mode = saved.get("mode", DEFAULT_MODE)
+            self.refresh_ms = saved.get("refresh_ms", DEFAULT_REFRESH)
             if "selected_monitor_idx" in saved:
                 idx = saved["selected_monitor_idx"]
                 if 0 <= idx < len(self.monitors):
@@ -357,24 +372,32 @@ class ScopeApp:
         self.monitor_combo.grid(row=2, column=1, padx=5, pady=4)
         self.monitor_combo.bind("<<ComboboxSelected>>", self.on_monitor_change)
 
+        # Refresh rate dropdown
+        tk.Label(settings, text="Refresh Rate:", fg="#ffffff", bg="#1e1e1e", font=("Segoe UI", 10)).grid(row=3, column=0, padx=5, pady=4, sticky="w")
+        self.refresh_var = tk.StringVar(value=next((k for k, v in REFRESH_OPTIONS.items() if v == self.refresh_ms), "60 FPS (16ms)"))
+        refresh_combo = ttk.Combobox(settings, textvariable=self.refresh_var, values=REFRESH_NAMES,
+                                     state="readonly", width=14)
+        refresh_combo.grid(row=3, column=1, padx=5, pady=4)
+        refresh_combo.bind("<<ComboboxSelected>>", self.on_refresh_change)
+
         # Toggle mode checkbox
         self.toggle_var = tk.BooleanVar(value=self.click_to_toggle)
         tk.Checkbutton(settings, text="Click to toggle (vs hold)", variable=self.toggle_var,
                        bg="#1e1e1e", fg="#ffffff", selectcolor="#1e1e1e",
                        activebackground="#1e1e1e", activeforeground="#ffffff",
-                       font=("Segoe UI", 10), command=self.on_click_toggle_change).grid(row=3, column=0, columnspan=2, sticky="w", padx=5, pady=2)
+                       font=("Segoe UI", 10), command=self.on_click_toggle_change).grid(row=4, column=0, columnspan=2, sticky="w", padx=5, pady=2)
 
         # Crosshair checkbox
         self.crosshair_var = tk.BooleanVar(value=self.show_crosshair)
         tk.Checkbutton(settings, text="Show crosshair & border", variable=self.crosshair_var,
                        bg="#1e1e1e", fg="#ffffff", selectcolor="#1e1e1e",
                        activebackground="#1e1e1e", activeforeground="#ffffff",
-                       font=("Segoe UI", 10), command=self.on_crosshair_change).grid(row=4, column=0, columnspan=2, sticky="w", padx=5, pady=2)
+                       font=("Segoe UI", 10), command=self.on_crosshair_change).grid(row=5, column=0, columnspan=2, sticky="w", padx=5, pady=2)
 
         # Reset button
         tk.Button(settings, text="Reset Defaults", command=self.reset_defaults,
                   bg="#555555", fg="#ffffff", font=("Segoe UI", 9),
-                  width=14, relief=tk.FLAT, cursor="hand2").grid(row=5, column=0, columnspan=2, pady=6)
+                  width=14, relief=tk.FLAT, cursor="hand2").grid(row=6, column=0, columnspan=2, pady=6)
 
         # --- Action buttons ---
         btn_frame = tk.Frame(self.root, bg="#1e1e1e")
@@ -410,6 +433,7 @@ class ScopeApp:
             "click_to_toggle": self.click_to_toggle,
             "mode": self.mode,
             "selected_monitor_idx": self.selected_monitor_idx,
+            "refresh_ms": self.refresh_ms,
         }
         save_settings(data)
 
@@ -448,6 +472,13 @@ class ScopeApp:
         self._save_settings()
         log(f"Crosshair set to {self.show_crosshair}")
 
+    def on_refresh_change(self, event=None):
+        name = self.refresh_var.get()
+        ms = REFRESH_OPTIONS.get(name, DEFAULT_REFRESH)
+        self.refresh_ms = ms
+        self._save_settings()
+        log(f"Refresh rate changed to {name}")
+
     def reset_defaults(self):
         if os.path.exists(SETTINGS_FILE):
             try:
@@ -470,6 +501,8 @@ class ScopeApp:
         self.click_to_toggle = DEFAULT_CLICK_TOGGLE
         self.crosshair_var.set(DEFAULT_CROSSHAIR)
         self.show_crosshair = DEFAULT_CROSSHAIR
+        self.refresh_var.set(next((k for k, v in REFRESH_OPTIONS.items() if v == DEFAULT_REFRESH), "60 FPS (16ms)"))
+        self.refresh_ms = DEFAULT_REFRESH
         self.refresh_crosshair()
         log("Settings reset to defaults")
 
@@ -613,15 +646,11 @@ class ScopeApp:
                 mx, my = get_cursor_pos()
                 x1 = mx - capture_w // 2
                 y1 = my - capture_h // 2
-                # Clamp to virtual screen (all monitors)
-                vsw = user32.GetSystemMetrics(78)  # SM_CXVIRTUALSCREEN
-                vsh = user32.GetSystemMetrics(79)   # SM_CYVIRTUALSCREEN
-                vsx = user32.GetSystemMetrics(76)   # SM_XVIRTUALSCREEN
-                vsy = user32.GetSystemMetrics(77)   # SM_YVIRTUALSCREEN
-                x1 = max(vsx, x1); y1 = max(vsy, y1)
+                # Clamp to virtual screen (cached at startup)
+                x1 = max(self._vs_x, x1); y1 = max(self._vs_y, y1)
                 x2 = x1 + capture_w
                 y2 = y1 + capture_h
-                x2 = min(vsx + vsw, x2); y2 = min(vsy + vsh, y2)
+                x2 = min(self._vs_x + self._vs_w, x2); y2 = min(self._vs_y + self._vs_h, y2)
             else:  # Center Screen
                 mon = self.monitors[self.selected_monitor_idx]
                 x1 = mon['cx'] - capture_w // 2
@@ -641,16 +670,19 @@ class ScopeApp:
             else:
                 self.debug_label.config(text=f"Debug: {self.mode} | source {x1},{y1} {capture_w}x{capture_h}")
 
-            user32.InvalidateRect(self.mag_hwnd, None, True)
+            # Only force repaint in Follow Mouse mode; Center Screen never moves
+            if self.mode == "Follow Mouse":
+                user32.InvalidateRect(self.mag_hwnd, None, True)
 
-            if self.overlay:
-                try:
-                    hwnd_overlay = self.overlay.winfo_id()
-                    user32.SetWindowPos(hwnd_overlay, -1, 0, 0, 0, 0,
-                                        SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE)
-                except Exception:
-                    self.overlay.lift()
+                if self.overlay:
+                    try:
+                        hwnd_overlay = self.overlay.winfo_id()
+                        user32.SetWindowPos(hwnd_overlay, -1, 0, 0, 0, 0,
+                                            SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE)
+                    except Exception:
+                        self.overlay.lift()
 
+            # Keep scope host from stealing activation
             if self.scope_hwnd:
                 user32.SetWindowPos(
                     self.scope_hwnd, 0, 0, 0, 0, 0,
@@ -662,7 +694,7 @@ class ScopeApp:
             log(f"Update source error: {e}")
 
         if self.scope_active:
-            self.root.after(UPDATE_INTERVAL, self.update_source)
+            self.root.after(self.refresh_ms, self.update_source)
 
     # -----------------------------------------------------------------------
     # Show / hide
