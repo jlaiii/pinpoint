@@ -239,7 +239,7 @@ class ScopeApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Pinpoint")
-        self.root.geometry("440x490")
+        self.root.geometry("440x520")
         self.root.resizable(False, False)
         self.root.configure(bg="#1e1e1e")
 
@@ -420,6 +420,21 @@ class ScopeApp:
         self.status_label = tk.Label(self.root, text="Status: Idle", font=("Segoe UI", 10, "bold"),
                                      fg="#ffaa00", bg="#1e1e1e")
         self.status_label.pack(pady=4)
+
+        # --- About ---
+        about_frame = tk.Frame(self.root, bg="#1e1e1e")
+        about_frame.pack(pady=(0, 8))
+        about_text = (
+            "Pinpoint v1.0 — Lightweight Windows screen magnifier.\n"
+            "Built on the native Windows Magnification API.\n"
+            "Open source under the MIT License."
+        )
+        tk.Label(about_frame, text=about_text, font=("Segoe UI", 8),
+                 fg="#555555", bg="#1e1e1e", justify=tk.CENTER).pack()
+        link = tk.Label(about_frame, text="github.com/jlaiii/pinpoint", font=("Segoe UI", 8, "underline"),
+                          fg="#0088cc", bg="#1e1e1e", cursor="hand2")
+        link.pack()
+        link.bind("<Button-1>", lambda e: os.system("start https://github.com/jlaiii/pinpoint"))
 
     # -----------------------------------------------------------------------
     # Settings callbacks
