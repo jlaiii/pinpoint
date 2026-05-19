@@ -288,8 +288,32 @@
             box-shadow: 0 0 10px rgba(255,68,68,0.5);
             animation: targetPulse 2s ease-in-out infinite;
         }
-        .target:nth-child(3) .target-dot { background: #4488ff; box-shadow: 0 0 10px rgba(68,136,255,0.5); }
-        .target:nth-child(4) .target-dot { background: #ffaa00; box-shadow: 0 0 10px rgba(255,170,0,0.5); }
+        .target.loot .target-dot { background: #4488ff; box-shadow: 0 0 10px rgba(68,136,255,0.5); }
+        .target.npc .target-dot { background: #ffaa00; box-shadow: 0 0 10px rgba(255,170,0,0.5); }
+
+        .text-panel {
+            position: absolute;
+            background: rgba(10,10,18,0.92);
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #94a3b8;
+            font-size: 0.58rem;
+            line-height: 1.5;
+            max-width: 150px;
+            pointer-events: none;
+        }
+        .text-panel strong {
+            color: #ffffff;
+            font-size: 0.65rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .text-panel.code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.52rem;
+            color: #00ff88;
+        }
         @keyframes targetPulse {
             0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.3); opacity: 0.7; }
@@ -467,15 +491,31 @@
                 <!-- Background scene -->
                 <div class="demo-scene" id="demoScene">
                     <div class="scene-grid"></div>
-                    <div class="target" style="left:18%; top:22%;">
+
+                    <div class="text-panel" style="left:56%; top:12%;">
+                        <strong>Quest Log</strong>
+                        Deliver the artifact to the northern outpost before nightfall. Reward: 250 gold.
+                    </div>
+                    <div class="text-panel code" style="left:24%; top:52%;">
+                        renderScale = 0.67;<br>
+                        antiAliasing = "TAA";<br>
+                        shadowRes = 2048;
+                    </div>
+                    <div class="text-panel" style="left:74%; top:62%;">
+                        <strong>Rare Amulet</strong>
+                        +12% Crit Chance<br>
+                        +8% Movement Speed
+                    </div>
+
+                    <div class="target enemy" style="left:16%; top:28%;">
                         <div class="target-dot"></div>
                         <div class="target-label">Enemy</div>
                     </div>
-                    <div class="target" style="left:72%; top:35%;">
+                    <div class="target loot" style="left:70%; top:38%;">
                         <div class="target-dot"></div>
                         <div class="target-label">Loot</div>
                     </div>
-                    <div class="target" style="left:45%; top:68%;">
+                    <div class="target npc" style="left:44%; top:74%;">
                         <div class="target-dot"></div>
                         <div class="target-label">NPC</div>
                     </div>
@@ -600,7 +640,6 @@
     (function() {
         const stage = document.getElementById('demoStage');
         const scope = document.getElementById('demoScope');
-        const lens = document.getElementById('scopeLens');
         const inner = document.getElementById('scopeInner');
         const crosshair = document.getElementById('scopeCrosshair');
         const info = document.getElementById('demoInfo');
@@ -623,12 +662,16 @@
             scope.style.height = scopeH + 'px';
             inner.style.width = stageW + 'px';
             inner.style.height = stageH + 'px';
+            applyScopePosition(scopeX, scopeY);
         }
         updateSize();
         window.addEventListener('resize', updateSize);
 
-        function moveScope(x, y) {
-            // x,y are 0-1 percentages
+        // Scope position as normalized 0-1 coordinates
+        let scopeX = 0.5, scopeY = 0.5;
+        let tweenRaf = null;
+
+        function applyScopePosition(x, y) {
             const px = x * stageW - scopeW / 2;
             const py = y * stageH - scopeH / 2;
             scope.style.left = px + 'px';
@@ -637,8 +680,34 @@
             // Magnification: move inner inversely
             const innerX = -(px * ZOOM);
             const innerY = -(py * ZOOM);
-            const innerScale = (stageW * ZOOM) / stageW;
-            inner.style.transform = `translate(${innerX}px, ${innerY}px) scale(${innerScale})`;
+            inner.style.transform = `translate(${innerX}px, ${innerY}px) scale(${ZOOM})`;
+        }
+
+        // Set initial position so first reveal is smooth
+        applyScopePosition(scopeX, scopeY);
+
+        function easeOutCubic(t) {
+            return 1 - Math.pow(1 - t, 3);
+        }
+
+        function tweenScope(toX, toY, duration) {
+            if (tweenRaf) cancelAnimationFrame(tweenRaf);
+            const startX = scopeX;
+            const startY = scopeY;
+            const startTime = performance.now();
+
+            function step(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = easeOutCubic(progress);
+                scopeX = startX + (toX - startX) * eased;
+                scopeY = startY + (toY - startY) * eased;
+                applyScopePosition(scopeX, scopeY);
+                if (progress < 1) {
+                    tweenRaf = requestAnimationFrame(step);
+                }
+            }
+            tweenRaf = requestAnimationFrame(step);
         }
 
         function showInfo(text) {
@@ -665,22 +734,26 @@
 
         // Demo sequence phases
         const phases = [
-            // [durationMs, actionCallback, infoText]
-            { dur: 800,  fn: () => { hideInfo(); showScope(); moveScope(0.5, 0.5); }, text: 'Hold RMB — Scope On' },
-            { dur: 1500, fn: () => { moveScope(0.18, 0.22); }, text: 'Follow Mouse mode' },
-            { dur: 1500, fn: () => { moveScope(0.72, 0.35); }, text: '2.2x Zoom' },
-            { dur: 1200, fn: () => { moveScope(0.45, 0.68); }, text: 'Track any target' },
-            { dur: 800,  fn: () => { hideScope(); }, text: 'Release RMB — Scope Off' },
-            { dur: 1000, fn: () => { showScope(); moveScope(0.5, 0.5); hideCrosshair(); }, text: 'Center Screen mode' },
-            { dur: 1200, fn: () => { showCrosshair(); }, text: 'Crosshair & border' },
-            { dur: 800,  fn: () => { hideCrosshair(); }, text: 'Minimal view' },
-            { dur: 600,  fn: () => { hideScope(); hideInfo(); }, text: null },
+            { dur: 1400, fn: () => { hideInfo(); showScope(); tweenScope(0.5, 0.5, 700); }, text: 'Hold RMB — Scope On' },
+            { dur: 2600, fn: () => { tweenScope(0.60, 0.22, 1000); }, text: 'Read tiny UI text' },
+            { dur: 2600, fn: () => { tweenScope(0.30, 0.58, 1000); }, text: 'Inspect code & details' },
+            { dur: 2600, fn: () => { tweenScope(0.80, 0.70, 1000); }, text: '2.2x Zoom clarity' },
+            { dur: 2200, fn: () => { tweenScope(0.18, 0.30, 900); }, text: 'Follow Mouse mode' },
+            { dur: 2200, fn: () => { tweenScope(0.72, 0.42, 900); }, text: 'Track any target' },
+            { dur: 1800, fn: () => { tweenScope(0.46, 0.76, 800); }, text: 'Precision aiming' },
+            { dur: 1000, fn: () => { hideScope(); }, text: 'Release RMB — Scope Off' },
+            { dur: 1400, fn: () => { showScope(); tweenScope(0.5, 0.5, 700); hideCrosshair(); }, text: 'Center Screen mode' },
+            { dur: 1400, fn: () => { showCrosshair(); }, text: 'Crosshair & border' },
+            { dur: 1000, fn: () => { hideCrosshair(); }, text: 'Minimal view' },
+            { dur: 800,  fn: () => { hideScope(); hideInfo(); }, text: null },
         ];
 
         let phaseIdx = 0;
         let timeoutId = null;
+        let running = false;
 
         function runPhase() {
+            if (!running) return;
             const p = phases[phaseIdx];
             p.fn();
             if (p.text) showInfo(p.text);
@@ -692,15 +765,27 @@
             }, p.dur);
         }
 
+        function startDemo() {
+            running = true;
+            runPhase();
+        }
+
+        function stopDemo() {
+            running = false;
+            clearTimeout(timeoutId);
+            if (tweenRaf) cancelAnimationFrame(tweenRaf);
+        }
+
         // Start demo after a short delay
-        setTimeout(runPhase, 600);
+        setTimeout(startDemo, 600);
 
         // Pause when tab hidden to save CPU
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
-                clearTimeout(timeoutId);
+                stopDemo();
             } else {
-                runPhase();
+                phaseIdx = phaseIdx % phases.length;
+                startDemo();
             }
         });
     })();
