@@ -383,11 +383,13 @@
             border-radius: 50%;
             pointer-events: none;
             opacity: 0;
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            visibility: hidden;
+            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
             transform: scale(0.8);
         }
         .demo-scope.active {
             opacity: 1;
+            visibility: visible;
             transform: scale(1);
         }
         .scope-lens {
@@ -770,21 +772,39 @@
             runPhase();
         }
 
-        function stopDemo() {
-            running = false;
-            clearTimeout(timeoutId);
-            if (tweenRaf) cancelAnimationFrame(tweenRaf);
+        function resetDemo() {
+            stopDemo();
+            phaseIdx = 0;
+            scopeX = 0.5;
+            scopeY = 0.5;
+            hideScope();
+            hideInfo();
+            hideCrosshair();
+            applyScopePosition(scopeX, scopeY);
         }
 
-        // Start demo after a short delay
-        setTimeout(startDemo, 600);
+        // Start demo only when the section scrolls into view
+        const demoSection = document.getElementById('demo');
+        let introTimer = null;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    introTimer = setTimeout(startDemo, 500);
+                } else {
+                    clearTimeout(introTimer);
+                    resetDemo();
+                }
+            });
+        }, { threshold: 0.3 });
+
+        observer.observe(demoSection);
 
         // Pause when tab hidden to save CPU
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 stopDemo();
-            } else {
-                phaseIdx = phaseIdx % phases.length;
+            } else if (demoSection.getBoundingClientRect().top < window.innerHeight && demoSection.getBoundingClientRect().bottom > 0) {
                 startDemo();
             }
         });
