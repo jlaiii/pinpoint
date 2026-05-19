@@ -9,10 +9,12 @@ Pinpoint is a simple yet powerful Windows utility that creates a circular magnif
 ## What is Pinpoint?
 
 - **Instant toggle** — hold a key (or click to toggle) to show/hide the scope
-- **Follows your cursor** — the magnified view tracks your mouse in real time
-- **Fully customizable** — change zoom level, scope size, trigger key, crosshair, and behavior
-- **Zero screen capture lag** — uses the native Windows Magnification API for smooth performance
+- **Two zoom modes** — follow your mouse cursor or lock to center-screen
+- **Multi-monitor support** — pick which monitor to magnify
+- **Fully customizable** — change zoom, size, trigger key, refresh rate, crosshair, and behavior
+- **Zero screen capture lag** — uses the native Windows Magnification API for smooth GPU-accelerated performance
 - **Click-through** — the overlay doesn't block your mouse from interacting with games or apps underneath
+- **Persistent settings** — every change auto-saves to a JSON file so your preferences stick
 
 ## Use Cases
 
@@ -44,8 +46,8 @@ Pinpoint is a simple yet powerful Windows utility that creates a circular magnif
 | Action | Default |
 |--------|---------|
 | Show scope | Hold **Right Mouse Button** |
-| Zoom | 2.0x (adjustable) |
-| Scope size | 300px (adjustable) |
+| Zoom | 2.0x (adjustable 1x-5x) |
+| Scope size | 300px (adjustable 100-600px) |
 
 All controls can be changed from the settings panel.
 
@@ -55,11 +57,19 @@ All controls can be changed from the settings panel.
 |---------|-------------|
 | **Zoom** | 1.0x to 5.0x magnification |
 | **Size** | Scope diameter from 100px to 600px |
+| **Zoom Mode** | Follow Mouse (tracks cursor) or Center Screen (locked to monitor center) |
+| **Target Monitor** | Choose which monitor to magnify (multi-monitor setups) |
 | **Trigger Key** | Right Mouse, Left Mouse, Middle Mouse, Mouse4/5, Shift, Ctrl, Alt, F, Q, E, R, C, V, Space, 1-5 |
 | **Click to toggle** | Click once to open, click again to close (instead of hold) |
+| **Refresh Rate** | 144 FPS, 120 FPS, 60 FPS, or 30 FPS — pick the smoothness you want |
 | **Crosshair & border** | Toggle the green circle and crosshair lines on or off |
+| **Reset Defaults** | One-click restore to factory settings |
 
-Changes take effect immediately — no restart needed.
+Changes take effect immediately and auto-save — no restart needed.
+
+## Settings Persistence
+
+Pinpoint auto-saves every change to `settings.json` in the same folder. The next time you launch the app, your zoom, size, key bindings, mode, monitor, refresh rate, and crosshair preference are all restored automatically. Click **Reset Defaults** to clear the file and start fresh.
 
 ## How It Works
 
@@ -79,4 +89,5 @@ MIT License — free to use, modify, and share.
 
 ---
 
-**Website:** [https://jlaiii.github.io/pinpoint](https://jlaiii.github.io/pinpoint)
+**Website:** [https://jlaiii.github.io/pinpoint](https://jlaiii.github.io/pinpoint)  
+**Repo:** [https://github.com/jlaiii/pinpoint](https://github.com/jlaiii/pinpoint)
