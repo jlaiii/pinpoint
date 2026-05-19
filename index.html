@@ -7,6 +7,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background: #0a0a0f;
@@ -15,7 +20,22 @@
             overflow-x: hidden;
         }
 
-        /* Hero */
+        /* ─── Cursor Glow ─── */
+        .cursor-glow {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,255,136,0.06) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+        body:hover .cursor-glow { opacity: 1; }
+
+        /* ─── Hero ─── */
         .hero {
             min-height: 100vh;
             display: flex;
@@ -26,19 +46,34 @@
             padding: 2rem;
             position: relative;
             background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a0f 70%);
+            overflow: hidden;
         }
         .hero::before {
             content: '';
             position: absolute;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(0,255,136,0.08) 0%, transparent 70%);
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(0,255,136,0.06) 0%, transparent 70%);
             border-radius: 50%;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             pointer-events: none;
+            animation: breathe 6s ease-in-out infinite;
         }
+        @keyframes breathe {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        }
+
+        /* Particle canvas sits behind everything in hero */
+        #particles {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
         .scope-demo {
             width: 280px;
             height: 280px;
@@ -52,6 +87,8 @@
             background: rgba(0,0,0,0.3);
             backdrop-filter: blur(2px);
             animation: pulse 3s ease-in-out infinite;
+            z-index: 1;
+            transition: transform 0.1s ease-out;
         }
         .scope-demo::before, .scope-demo::after {
             content: '';
@@ -59,14 +96,8 @@
             background: #00ff88;
             opacity: 0.6;
         }
-        .scope-demo::before {
-            width: 1px;
-            height: 80%;
-        }
-        .scope-demo::after {
-            width: 80%;
-            height: 1px;
-        }
+        .scope-demo::before { width: 1px; height: 80%; }
+        .scope-demo::after { width: 80%; height: 1px; }
         .scope-demo .center-dot {
             width: 8px;
             height: 8px;
@@ -78,12 +109,16 @@
             0%, 100% { box-shadow: 0 0 20px rgba(0,255,136,0.15); }
             50% { box-shadow: 0 0 40px rgba(0,255,136,0.3); }
         }
+
         .hero h1 {
             font-size: 4rem;
             font-weight: 800;
             color: #ffffff;
             margin-bottom: 0.5rem;
             letter-spacing: -1px;
+            z-index: 1;
+            position: relative;
+            cursor: default;
         }
         .hero h1 span { color: #00ff88; }
         .hero p.tagline {
@@ -91,12 +126,51 @@
             color: #94a3b8;
             max-width: 500px;
             margin-bottom: 2rem;
+            z-index: 1;
+            position: relative;
+            opacity: 0;
+            animation: fadeUp 0.8s ease 0.3s forwards;
         }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Ticker stats under tagline */
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            z-index: 1;
+            position: relative;
+            opacity: 0;
+            animation: fadeUp 0.8s ease 0.5s forwards;
+        }
+        .hero-stat {
+            text-align: center;
+        }
+        .hero-stat .num {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00ff88;
+            display: block;
+        }
+        .hero-stat .label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
         .cta {
             display: inline-flex;
             gap: 1rem;
             flex-wrap: wrap;
             justify-content: center;
+            z-index: 1;
+            position: relative;
+            opacity: 0;
+            animation: fadeUp 0.8s ease 0.7s forwards;
         }
         .btn {
             padding: 0.9rem 2rem;
@@ -105,6 +179,8 @@
             text-decoration: none;
             transition: all 0.2s;
             font-size: 1rem;
+            position: relative;
+            overflow: hidden;
         }
         .btn-primary {
             background: #00ff88;
@@ -113,6 +189,7 @@
         .btn-primary:hover {
             background: #00cc6a;
             transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0,255,136,0.3);
         }
         .btn-secondary {
             background: transparent;
@@ -122,9 +199,25 @@
         .btn-secondary:hover {
             border-color: #00ff88;
             color: #00ff88;
+            transform: translateY(-2px);
         }
 
-        /* Features */
+        /* ─── Scroll Reveal Base ─── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.4s; }
+
+        /* ─── Features ─── */
         .features {
             padding: 6rem 2rem;
             max-width: 1100px;
@@ -147,15 +240,44 @@
             border: 1px solid #1e293b;
             border-radius: 12px;
             padding: 2rem;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            padding: 1px;
+            background: linear-gradient(135deg, transparent 40%, rgba(0,255,136,0.15) 50%, transparent 60%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .feature-card:hover::before {
+            opacity: 1;
         }
         .feature-card:hover {
             border-color: #00ff88;
-            transform: translateY(-4px);
+            transform: translateY(-6px);
+            box-shadow: 0 10px 40px rgba(0,255,136,0.08);
         }
         .feature-card .icon {
             font-size: 2rem;
             margin-bottom: 1rem;
+            display: inline-block;
+            animation: float 4s ease-in-out infinite;
+        }
+        .feature-card:nth-child(2) .icon { animation-delay: 0.5s; }
+        .feature-card:nth-child(3) .icon { animation-delay: 1s; }
+        .feature-card:nth-child(4) .icon { animation-delay: 1.5s; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
         }
         .feature-card h3 {
             font-size: 1.25rem;
@@ -168,14 +290,29 @@
             font-size: 0.95rem;
         }
 
-        /* Use cases */
+        /* ─── Use cases ─── */
         .usecases {
             background: #0f0f16;
             padding: 6rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .usecases::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(0,255,136,0.03) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
         }
         .usecases-inner {
             max-width: 1100px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
         .usecases h2 {
             text-align: center;
@@ -195,10 +332,21 @@
             border-radius: 10px;
             padding: 1.5rem;
             text-align: center;
+            transition: all 0.3s ease;
+        }
+        .usecase-item:hover {
+            transform: translateY(-4px) scale(1.02);
+            border-color: #00ff88;
+            box-shadow: 0 8px 30px rgba(0,255,136,0.06);
         }
         .usecase-item .emoji {
             font-size: 2.5rem;
             margin-bottom: 0.75rem;
+            display: inline-block;
+            transition: transform 0.3s;
+        }
+        .usecase-item:hover .emoji {
+            transform: scale(1.2) rotate(5deg);
         }
         .usecase-item h4 {
             color: #ffffff;
@@ -210,33 +358,86 @@
             font-size: 0.9rem;
         }
 
-        /* Footer */
+        /* ─── Footer ─── */
         footer {
             text-align: center;
             padding: 3rem 2rem;
             border-top: 1px solid #1e293b;
             color: #64748b;
             font-size: 0.9rem;
+            position: relative;
         }
         footer a {
             color: #00ff88;
             text-decoration: none;
+            position: relative;
+        }
+        footer a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #00ff88;
+            transition: width 0.3s;
+        }
+        footer a:hover::after {
+            width: 100%;
         }
 
-        /* Responsive */
+        /* ─── Scanline overlay ─── */
+        .scanlines {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9998;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.03) 2px,
+                rgba(0,0,0,0.03) 4px
+            );
+            opacity: 0.5;
+        }
+
+        /* ─── Responsive ─── */
         @media (max-width: 600px) {
             .hero h1 { font-size: 2.5rem; }
             .scope-demo { width: 200px; height: 200px; }
+            .hero-stats { gap: 1rem; flex-wrap: wrap; }
         }
     </style>
 </head>
 <body>
+    <div class="cursor-glow" id="cursorGlow"></div>
+    <div class="scanlines"></div>
+
     <section class="hero">
-        <div class="scope-demo">
+        <canvas id="particles"></canvas>
+
+        <div class="scope-demo" id="heroScope">
             <div class="center-dot"></div>
         </div>
-        <h1><span>Pin</span>point</h1>
+        <h1 id="heroTitle"><span>Pin</span>point</h1>
         <p class="tagline">A lightweight, customizable screen magnifier for Windows. Perfect for gaming, design, and precision work.</p>
+
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <span class="num" data-target="5">0</span>
+                <span class="label">Zoom Levels</span>
+            </div>
+            <div class="hero-stat">
+                <span class="num" data-target="144">0</span>
+                <span class="label">Max FPS</span>
+            </div>
+            <div class="hero-stat">
+                <span class="num" data-target="0">0</span>
+                <span class="label">Input Lag</span>
+            </div>
+        </div>
+
         <div class="cta">
             <a href="https://github.com/jlaiii/pinpoint" class="btn btn-primary">Download on GitHub</a>
             <a href="#features" class="btn btn-secondary">Learn More</a>
@@ -244,44 +445,44 @@
     </section>
 
     <section class="features" id="features">
-        <h2>Why Pinpoint?</h2>
+        <h2 class="reveal">Why Pinpoint?</h2>
         <div class="feature-grid">
-            <div class="feature-card">
+            <div class="feature-card reveal reveal-delay-1">
                 <div class="icon">&#9889;</div>
                 <h3>Native Performance</h3>
                 <p>Built on the Windows Magnification API for GPU-accelerated, lag-free zoom. No slow screenshot loops.</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal reveal-delay-2">
                 <div class="icon">&#127918;</div>
                 <h3>Gaming Ready</h3>
                 <p>Click-through overlay means your mouse still works in-game. Toggle with any key or mouse button.</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal reveal-delay-3">
                 <div class="icon">&#128269;</div>
                 <h3>Two Zoom Modes</h3>
                 <p>Follow your mouse cursor in real time, or lock the scope to the center of any monitor you choose.</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal reveal-delay-4">
                 <div class="icon">&#128187;</div>
                 <h3>Multi-Monitor Support</h3>
                 <p>Detects all connected displays. Pick which monitor to magnify — perfect for multi-screen setups.</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal reveal-delay-1">
                 <div class="icon">&#9881;&#65039;</div>
                 <h3>Fully Customizable</h3>
                 <p>Adjust zoom (1x-5x), scope size (100-600px), trigger key, refresh rate, crosshair, and behavior on the fly.</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal reveal-delay-2">
                 <div class="icon">&#128193;</div>
                 <h3>Persistent Settings</h3>
                 <p>Every change auto-saves to a JSON file. Reopen Pinpoint and your preferences are right where you left them.</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal reveal-delay-3">
                 <div class="icon">&#128161;</div>
                 <h3>Zero Dependencies</h3>
                 <p>Only needs Python and Pillow. No heavy frameworks or complex installers.</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal reveal-delay-4">
                 <div class="icon">&#128275;</div>
                 <h3>Open Source</h3>
                 <p>MIT licensed. Free to use, modify, and share. Community contributions welcome.</p>
@@ -291,24 +492,24 @@
 
     <section class="usecases">
         <div class="usecases-inner">
-            <h2>Built For</h2>
+            <h2 class="reveal">Built For</h2>
             <div class="usecase-list">
-                <div class="usecase-item">
+                <div class="usecase-item reveal reveal-delay-1">
                     <div class="emoji">&#127918;</div>
                     <h4>Gamers</h4>
                     <p>Zoom in on distant targets, read small UI text, inspect fine details without leaning in.</p>
                 </div>
-                <div class="usecase-item">
+                <div class="usecase-item reveal reveal-delay-2">
                     <div class="emoji">&#127912;</div>
                     <h4>Designers</h4>
                     <p>Pixel-perfect editing, color inspection, and detail work without eye strain.</p>
                 </div>
-                <div class="usecase-item">
+                <div class="usecase-item reveal reveal-delay-3">
                     <div class="emoji">&#128424;&#65039;</div>
                     <h4>Creators</h4>
                     <p>Stream zoomed-in highlights to your audience for tutorials and gameplay moments.</p>
                 </div>
-                <div class="usecase-item">
+                <div class="usecase-item reveal reveal-delay-4">
                     <div class="emoji">&#9855;</div>
                     <h4>Accessibility</h4>
                     <p>Quick magnification wherever your cursor goes, without disrupting your workflow.</p>
@@ -322,5 +523,195 @@
         <p><a href="https://github.com/jlaiii/pinpoint">GitHub</a> &middot; <a href="https://jlaiii.github.io/pinpoint">Website</a> &middot; Made with Python + the Windows Magnification API</p>
     </footer>
 
+<script>
+/* ─── Particle Network ─── */
+(function() {
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    const particles = [];
+    const PARTICLE_COUNT = 70;
+    const CONNECTION_DIST = 120;
+    const MOUSE_DIST = 180;
+    let mouseX = -1000, mouseY = -1000;
+
+    function resize() {
+        const hero = document.querySelector('.hero');
+        width = hero.offsetWidth;
+        height = hero.offsetHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.vx = (Math.random() - 0.5) * 0.6;
+            this.vy = (Math.random() - 0.5) * 0.6;
+            this.size = Math.random() * 2 + 1;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            if (this.x < 0 || this.x > width) this.vx *= -1;
+            if (this.y < 0 || this.y > height) this.vy *= -1;
+
+            // Mouse repulsion
+            const dx = this.x - mouseX;
+            const dy = this.y - mouseY;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < MOUSE_DIST) {
+                const force = (MOUSE_DIST - dist) / MOUSE_DIST;
+                this.x += (dx / dist) * force * 2;
+                this.y += (dy / dist) * force * 2;
+            }
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,255,136,0.5)';
+            ctx.fill();
+        }
+    }
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push(new Particle());
+    }
+
+    document.querySelector('.hero').addEventListener('mousemove', e => {
+        const rect = canvas.getBoundingClientRect();
+        mouseX = e.clientX - rect.left;
+        mouseY = e.clientY - rect.top;
+    });
+    document.querySelector('.hero').addEventListener('mouseleave', () => {
+        mouseX = -1000;
+        mouseY = -1000;
+    });
+
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+        for (const p of particles) p.update();
+
+        // Draw connections
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < CONNECTION_DIST) {
+                    const opacity = (1 - dist / CONNECTION_DIST) * 0.15;
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(0,255,136,${opacity})`;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            }
+        }
+        for (const p of particles) p.draw();
+        requestAnimationFrame(animate);
+    }
+    animate();
+})();
+
+/* ─── Cursor Glow ─── */
+(function() {
+    const glow = document.getElementById('cursorGlow');
+    let gx = 0, gy = 0, tx = 0, ty = 0;
+    document.addEventListener('mousemove', e => {
+        tx = e.clientX;
+        ty = e.clientY;
+    });
+    function updateGlow() {
+        gx += (tx - gx) * 0.08;
+        gy += (ty - gy) * 0.08;
+        glow.style.left = gx + 'px';
+        glow.style.top = gy + 'px';
+        requestAnimationFrame(updateGlow);
+    }
+    updateGlow();
+})();
+
+/* ─── Hero Scope Parallax ─── */
+(function() {
+    const scope = document.getElementById('heroScope');
+    const hero = document.querySelector('.hero');
+    hero.addEventListener('mousemove', e => {
+        const rect = hero.getBoundingClientRect();
+        const x = (e.clientX - rect.left - rect.width/2) / rect.width;
+        const y = (e.clientY - rect.top - rect.height/2) / rect.height;
+        scope.style.transform = `translate(${x * 15}px, ${y * 15}px)`;
+    });
+    hero.addEventListener('mouseleave', () => {
+        scope.style.transform = 'translate(0,0)';
+    });
+})();
+
+/* ─── Text Scramble on Title Hover ─── */
+(function() {
+    const title = document.getElementById('heroTitle');
+    const original = title.innerHTML;
+    const chars = '!<>-_\\/[]{}—=+*^?#________';
+    let interval = null;
+
+    title.addEventListener('mouseenter', () => {
+        let iteration = 0;
+        clearInterval(interval);
+        interval = setInterval(() => {
+            title.innerHTML = original.split('').map((char, index) => {
+                if (char === '<') return '<'; // preserve tags
+                if (index < iteration) return original[index];
+                return chars[Math.floor(Math.random() * chars.length)];
+            }).join('');
+            if (iteration >= original.length) {
+                clearInterval(interval);
+                title.innerHTML = original;
+            }
+            iteration += 1;
+        }, 25);
+    });
+})();
+
+/* ─── Scroll Reveal ─── */
+(function() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+})();
+
+/* ─── Animated Number Counters ─── */
+(function() {
+    const counters = document.querySelectorAll('.hero-stat .num');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !entry.target.dataset.counted) {
+                entry.target.dataset.counted = 'true';
+                const target = parseInt(entry.target.dataset.target);
+                const suffix = entry.target.parentElement.querySelector('.label').textContent === 'Input Lag' ? 'ms' : '';
+                let current = 0;
+                const step = Math.max(1, Math.floor(target / 40));
+                const timer = setInterval(() => {
+                    current += step;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+                    entry.target.textContent = current + suffix;
+                }, 25);
+            }
+        });
+    }, { threshold: 0.5 });
+    counters.forEach(c => observer.observe(c));
+})();
+</script>
 </body>
 </html>
