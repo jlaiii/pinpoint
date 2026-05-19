@@ -651,28 +651,15 @@
     });
 })();
 
-/* ─── Text Scramble on Title Hover ─── */
+/* ─── Title Glow Pulse on Hover ─── */
 (function() {
     const title = document.getElementById('heroTitle');
-    const original = title.innerHTML;
-    const chars = '!<>-_\\/[]{}—=+*^?#________';
-    let interval = null;
-
     title.addEventListener('mouseenter', () => {
-        let iteration = 0;
-        clearInterval(interval);
-        interval = setInterval(() => {
-            title.innerHTML = original.split('').map((char, index) => {
-                if (char === '<') return '<'; // preserve tags
-                if (index < iteration) return original[index];
-                return chars[Math.floor(Math.random() * chars.length)];
-            }).join('');
-            if (iteration >= original.length) {
-                clearInterval(interval);
-                title.innerHTML = original;
-            }
-            iteration += 1;
-        }, 25);
+        title.style.transition = 'filter 0.3s ease';
+        title.style.filter = 'drop-shadow(0 0 12px rgba(0,255,136,0.6))';
+    });
+    title.addEventListener('mouseleave', () => {
+        title.style.filter = 'none';
     });
 })();
 
