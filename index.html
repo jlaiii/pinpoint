@@ -223,10 +223,225 @@
             text-decoration: none;
         }
 
+        /* Live Demo */
+        .live-demo {
+            padding: 5rem 2rem;
+            background: #0f0f16;
+        }
+        .demo-inner {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .live-demo h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+        .demo-sub {
+            color: #94a3b8;
+            margin-bottom: 2.5rem;
+            font-size: 1.05rem;
+        }
+        .demo-stage {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            aspect-ratio: 16 / 9;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #1e293b;
+            background: #0a0a12;
+        }
+        .demo-scene {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+        .scene-grid {
+            position: absolute;
+            inset: -50%;
+            background-image:
+                linear-gradient(rgba(0,255,136,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,136,0.04) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: gridScroll 20s linear infinite;
+        }
+        @keyframes gridScroll {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(40px, 40px); }
+        }
+        .target {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        .target-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #ff4444;
+            box-shadow: 0 0 10px rgba(255,68,68,0.5);
+            animation: targetPulse 2s ease-in-out infinite;
+        }
+        .target:nth-child(3) .target-dot { background: #4488ff; box-shadow: 0 0 10px rgba(68,136,255,0.5); }
+        .target:nth-child(4) .target-dot { background: #ffaa00; box-shadow: 0 0 10px rgba(255,170,0,0.5); }
+        @keyframes targetPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
+        }
+        .target-label {
+            font-size: 0.7rem;
+            color: #ffffff;
+            background: rgba(0,0,0,0.6);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .hud {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            background: rgba(10,10,18,0.85);
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .hud-row {
+            display: flex;
+            gap: 10px;
+            font-size: 0.75rem;
+        }
+        .hud-label {
+            color: #64748b;
+            width: 36px;
+            text-align: right;
+        }
+        .hud-value {
+            color: #00ff88;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+        .mini-map {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            width: 70px;
+            height: 70px;
+            background: rgba(10,10,18,0.85);
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+        }
+        .map-dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #00ff88;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Scope */
+        .demo-scope {
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            transform: scale(0.8);
+        }
+        .demo-scope.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .scope-lens {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #00ff88;
+            box-shadow: 0 0 30px rgba(0,255,136,0.2), inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        .scope-inner {
+            position: absolute;
+            width: 800px;
+            height: 450px;
+            transform-origin: top left;
+            will-change: transform;
+        }
+        .scope-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .scope-crosshair {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .scope-crosshair.visible {
+            opacity: 1;
+        }
+        .scope-crosshair::before, .scope-crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(0,255,136,0.5);
+        }
+        .scope-crosshair::before {
+            width: 1px;
+            height: 80%;
+            top: 10%;
+            left: 50%;
+        }
+        .scope-crosshair::after {
+            width: 80%;
+            height: 1px;
+            top: 50%;
+            left: 10%;
+        }
+
+        .demo-info {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: #00ff88;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid rgba(0,255,136,0.3);
+            opacity: 0;
+            transition: opacity 0.4s;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        .demo-info.show {
+            opacity: 1;
+        }
+
         /* Responsive */
         @media (max-width: 600px) {
             .hero h1 { font-size: 2.5rem; }
             .scope-demo { width: 200px; height: 200px; }
+            .demo-scope { width: 160px; height: 160px; }
         }
     </style>
 </head>
@@ -240,6 +455,65 @@
         <div class="cta">
             <a href="https://github.com/jlaiii/pinpoint" class="btn btn-primary">Download on GitHub</a>
             <a href="#features" class="btn btn-secondary">Learn More</a>
+        </div>
+    </section>
+
+    <section class="live-demo" id="demo">
+        <div class="demo-inner">
+            <h2>See It In Action</h2>
+            <p class="demo-sub">An interactive preview of how Pinpoint magnifies your screen.</p>
+
+            <div class="demo-stage" id="demoStage">
+                <!-- Background scene -->
+                <div class="demo-scene" id="demoScene">
+                    <div class="scene-grid"></div>
+                    <div class="target" style="left:18%; top:22%;">
+                        <div class="target-dot"></div>
+                        <div class="target-label">Enemy</div>
+                    </div>
+                    <div class="target" style="left:72%; top:35%;">
+                        <div class="target-dot"></div>
+                        <div class="target-label">Loot</div>
+                    </div>
+                    <div class="target" style="left:45%; top:68%;">
+                        <div class="target-dot"></div>
+                        <div class="target-label">NPC</div>
+                    </div>
+
+                    <div class="hud">
+                        <div class="hud-row">
+                            <span class="hud-label">HP</span>
+                            <span class="hud-value">84/100</span>
+                        </div>
+                        <div class="hud-row">
+                            <span class="hud-label">Ammo</span>
+                            <span class="hud-value">12/30</span>
+                        </div>
+                        <div class="hud-row">
+                            <span class="hud-label">Dist</span>
+                            <span class="hud-value">142m</span>
+                        </div>
+                    </div>
+
+                    <div class="mini-map">
+                        <div class="map-dot"></div>
+                    </div>
+                </div>
+
+                <!-- Magnified scope overlay -->
+                <div class="demo-scope" id="demoScope">
+                    <div class="scope-lens" id="scopeLens">
+                        <div class="scope-inner" id="scopeInner">
+                            <!-- Cloned scene content for magnification -->
+                        </div>
+                    </div>
+                    <div class="scope-ring"></div>
+                    <div class="scope-crosshair" id="scopeCrosshair"></div>
+                </div>
+
+                <!-- Info label -->
+                <div class="demo-info" id="demoInfo">Hold Right Mouse to toggle</div>
+            </div>
         </div>
     </section>
 
@@ -321,5 +595,115 @@
         <p>Pinpoint is open source under the MIT License.</p>
         <p><a href="https://github.com/jlaiii/pinpoint">GitHub</a> &middot; <a href="https://jlaiii.github.io/pinpoint">Website</a> &middot; Made with Python + the Windows Magnification API</p>
     </footer>
+
+    <script>
+    (function() {
+        const stage = document.getElementById('demoStage');
+        const scope = document.getElementById('demoScope');
+        const lens = document.getElementById('scopeLens');
+        const inner = document.getElementById('scopeInner');
+        const crosshair = document.getElementById('scopeCrosshair');
+        const info = document.getElementById('demoInfo');
+        const scene = document.getElementById('demoScene');
+
+        // Clone scene into scope inner for magnification
+        inner.innerHTML = scene.innerHTML;
+
+        const ZOOM = 2.2;
+        let scopeW = 220, scopeH = 220;
+        let stageW, stageH;
+
+        function updateSize() {
+            const r = stage.getBoundingClientRect();
+            stageW = r.width;
+            stageH = r.height;
+            scopeW = Math.min(220, stageW * 0.35);
+            scopeH = scopeW;
+            scope.style.width = scopeW + 'px';
+            scope.style.height = scopeH + 'px';
+            inner.style.width = stageW + 'px';
+            inner.style.height = stageH + 'px';
+        }
+        updateSize();
+        window.addEventListener('resize', updateSize);
+
+        function moveScope(x, y) {
+            // x,y are 0-1 percentages
+            const px = x * stageW - scopeW / 2;
+            const py = y * stageH - scopeH / 2;
+            scope.style.left = px + 'px';
+            scope.style.top = py + 'px';
+
+            // Magnification: move inner inversely
+            const innerX = -(px * ZOOM);
+            const innerY = -(py * ZOOM);
+            const innerScale = (stageW * ZOOM) / stageW;
+            inner.style.transform = `translate(${innerX}px, ${innerY}px) scale(${innerScale})`;
+        }
+
+        function showInfo(text) {
+            info.textContent = text;
+            info.classList.add('show');
+        }
+        function hideInfo() {
+            info.classList.remove('show');
+        }
+
+        function showScope() {
+            scope.classList.add('active');
+        }
+        function hideScope() {
+            scope.classList.remove('active');
+        }
+
+        function showCrosshair() {
+            crosshair.classList.add('visible');
+        }
+        function hideCrosshair() {
+            crosshair.classList.remove('visible');
+        }
+
+        // Demo sequence phases
+        const phases = [
+            // [durationMs, actionCallback, infoText]
+            { dur: 800,  fn: () => { hideInfo(); showScope(); moveScope(0.5, 0.5); }, text: 'Hold RMB — Scope On' },
+            { dur: 1500, fn: () => { moveScope(0.18, 0.22); }, text: 'Follow Mouse mode' },
+            { dur: 1500, fn: () => { moveScope(0.72, 0.35); }, text: '2.2x Zoom' },
+            { dur: 1200, fn: () => { moveScope(0.45, 0.68); }, text: 'Track any target' },
+            { dur: 800,  fn: () => { hideScope(); }, text: 'Release RMB — Scope Off' },
+            { dur: 1000, fn: () => { showScope(); moveScope(0.5, 0.5); hideCrosshair(); }, text: 'Center Screen mode' },
+            { dur: 1200, fn: () => { showCrosshair(); }, text: 'Crosshair & border' },
+            { dur: 800,  fn: () => { hideCrosshair(); }, text: 'Minimal view' },
+            { dur: 600,  fn: () => { hideScope(); hideInfo(); }, text: null },
+        ];
+
+        let phaseIdx = 0;
+        let timeoutId = null;
+
+        function runPhase() {
+            const p = phases[phaseIdx];
+            p.fn();
+            if (p.text) showInfo(p.text);
+            else hideInfo();
+
+            timeoutId = setTimeout(() => {
+                phaseIdx = (phaseIdx + 1) % phases.length;
+                runPhase();
+            }, p.dur);
+        }
+
+        // Start demo after a short delay
+        setTimeout(runPhase, 600);
+
+        // Pause when tab hidden to save CPU
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                clearTimeout(timeoutId);
+            } else {
+                runPhase();
+            }
+        });
+    })();
+    </script>
 </body>
 </html>
